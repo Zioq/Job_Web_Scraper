@@ -28,7 +28,7 @@ def extract_indeed_pages():
     return max_page
 
 
-def extract_job(html):
+def extract_company(html):
     # chaining
     title = (html.find("h2", {"class": "title"})).find("a")["title"]
 
@@ -42,19 +42,30 @@ def extract_job(html):
         company = str(company.string)
     company = company.strip()  # Delete white space
 
-    return {'title': title, 'company': company}
+    # Get the location
+    location = html.find("div", {"class": "recJobLoc"})["data-rc-loc"]
+
+    # Get job Id
+    job_id = html["data-jk"]
+    #print(job_id)
+
+
+    return {'title': title, 'company': company, 'location': location, 'link': f"https://ca.indeed.com/jobs?q=python&vjk={job_id}"}
 
 
 def extract_indeed_jobs(last_page):
     jobs = []
 
     # for page in range(last_page):
-    result = requests.get(f"{URL}&startstart={0*LIMIT}")
-    soup = BeautifulSoup(result.text, "html.parser")
-    results = soup.find_all("div", {"class": "jobsearch-SerpJobCard"})
-    for result in results:
-        ''' title = (result.find("h2",{"class":"title"}))
-        anchor = title.find("a")["title"] '''
-        job = extract_job(result)
-        print(job)
+    for page in range(last_page):
+        print(f"Scraipping page {page}")
+        result = requests.get(f"{URL}&startstart={page*LIMIT}")
+        soup = BeautifulSoup(result.text, "html.parser")
+        results = soup.find_all("div", {"class": "jobsearch-SerpJobCard"})
+        for result in results:
+            ''' title = (result.find("h2",{"class":"title"}))
+            anchor = title.find("a")["title"] '''
+            job = extract_company(result)
+            jobs.append(job)
+
     return jobs
