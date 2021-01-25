@@ -5,7 +5,7 @@ LIMIT = 50
 URL = f"https://ca.indeed.com/jobs?q=python&limit={LIMIT}"
 
 
-def extract_indeed_pages():
+def get_last_page():
     # Get the HTML Text
     result = requests.get(URL)
 
@@ -35,13 +35,15 @@ def extract_company(html):
     # Get company title
     company = html.find("span", {"class": "company"})
     company_anchor = company.find("a")
+    if company:
 
-    if company_anchor is not None:
-        company = str(company_anchor.string)
+        if company_anchor is not None:
+            company = str(company_anchor.string)
+        else:
+            company = str(company.string)
+        company = company.strip()  # Delete white space
     else:
-        company = str(company.string)
-    company = company.strip()  # Delete white space
-
+        company = None
     # Get the location
     location = html.find("div", {"class": "recJobLoc"})["data-rc-loc"]
 
@@ -53,12 +55,12 @@ def extract_company(html):
     return {'title': title, 'company': company, 'location': location, 'link': f"https://ca.indeed.com/jobs?q=python&vjk={job_id}"}
 
 
-def extract_indeed_jobs(last_page):
+def extract_jobs(last_page):
     jobs = []
 
     # for page in range(last_page):
     for page in range(last_page):
-        print(f"Scraipping page {page}")
+        print(f"Scraping page: {page}")
         result = requests.get(f"{URL}&startstart={page*LIMIT}")
         soup = BeautifulSoup(result.text, "html.parser")
         results = soup.find_all("div", {"class": "jobsearch-SerpJobCard"})
@@ -68,4 +70,9 @@ def extract_indeed_jobs(last_page):
             job = extract_company(result)
             jobs.append(job)
 
+    return jobs
+
+def get_jobs():
+    last_page = get_last_page()
+    jobs = extract_jobs(last_page)
     return jobs
